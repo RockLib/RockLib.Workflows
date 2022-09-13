@@ -29,12 +29,12 @@ jobs:
       
       # Using dotnet build to build the solution using a target framework specified in the matrix.
       - name: Build ${{ matrix.target_framework }}
-        run: dotnet build --configuration Release --framework ${{ matrix.target_framework }}
+        run: dotnet build .github/workflows/Build.sln --configuration Release --framework ${{ matrix.target_framework }}
       
       # Using dotnet test to run any unit tests found in the solution using a target framework specified in the matrix.
       # If any test fails, the job and workflow will fail.
       - name: Test ${{ matrix.target_framework }}
-        run: dotnet test --configuration Release --no-build --verbosity normal --framework ${{ matrix.target_framework }}
+        run: dotnet test .github/workflows/Build.sln --configuration Release --no-build --verbosity normal --framework ${{ matrix.target_framework }}
       
       # Using GitHub upload-artifact action to persist the workspace for the next job.
       - name: Upload workspace
