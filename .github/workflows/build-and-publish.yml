@@ -64,7 +64,6 @@ jobs:
             }
           }
           echo "project(s) changed JSON - $projChangedJSON"
-
           
           # Set output.
           echo "::set-output name=has_changes::$hasChanges"
