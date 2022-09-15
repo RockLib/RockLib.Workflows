@@ -46,12 +46,24 @@ jobs:
           
           # Set hasChanges to true if there are any changed projects after filtering.
           $hasChanges = $projChanged.Length -gt 0
+          # Set singleProject to true if projChanged is not already an array of projects.
+          $singleProject = $projChanged -isnot [array]
 
           # If there are changed projects, convert to JSON array.
           if ($hasChanges)
           {
-            $projChangedJSON = ConvertTo-Json -Compress -AsArray $projChanged
+            # If only one project changed, convert to single element array.
+            if ($singleProject)
+            {
+              $projChangedJSON = ConvertTo-Json -Compress -AsArray $projChanged
+            }
+            # Else, it will already be an array.
+            else
+            {
+              $projChangedJSON = ConvertTo-Json -Compress $projChanged
+            }
           }
+          echo "project(s) changed JSON - $projChangedJSON"
           
           # Set output.
           echo "::set-output name=has_changes::$hasChanges"
