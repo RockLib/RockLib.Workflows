@@ -22,69 +22,64 @@ jobs:
       version_number: ${{ steps.variables.outputs.version_number }}
       package_name: ${{ steps.variables.outputs.package_name }}
       repo_name: ${{ steps.variables.outputs.repo_name }}
-    
+
     steps:
-      # # Using Github checkout action to retrieve the codebase.
-      # - name: Fetch code
-      #   uses: actions/checkout@v3
-      
+      # Set various variables needed in other jobs.
       - name: Set variables
         id: variables
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          # Gets release tag. 
           releaseTag=$(gh api -H "Accept: application/vnd.github+json" /repos/${GITHUB_REPOSITORY}/releases/latest | jq -r '.tag_name')
           echo "release_tag: $releaseTag"
           echo ::set-output name=release_tag::$releaseTag
 
+          # Gets release version number from the release tag.
           versionNumber=${releaseTag#${releaseTag%%[0-9]*}}
           echo "release_version: $versionNumber"
           echo ::set-output name=version_number::$versionNumber
 
+          # Gets release package name from the release tag.
           packageName=${releaseTag%%?[[:digit:]]*}
           echo "package_name: $packageName"
           echo ::set-output name=package_name::$packageName
 
+          # Gets the repo name from GITHUB_REPOSITORY env var.
           repoName=${GITHUB_REPOSITORY#*RockLib/}
           echo "repo_name: $repoName"
           echo ::set-output name=repo_name::$repoName
 
+  # build job builds for each of the target frameworks of the solution.
+  build:
+    name: Build ${{ needs.set_variables.outputs.package_name }}
+    # This job will not run until build is complete and passes.
+    needs: set_variables
 
+    # Using the latest Ubuntu GitHub-hosted runner.
+    runs-on: windows-latest
 
+    steps:
+      # Using Github checkout action to retrieve the codebase.
+      - name: Fetch code
+        uses: actions/checkout@v3
 
-          
+      - name: Pre Build Directory Structure
+        run: tree /f /a
 
+      # Using dotnet build to build the solution using a target framework specified in the matrix.
+      - name: Build
+        run: dotnet build ${{ needs.set_variables.outputs.package_name }}/${{ needs.set_variables.outputs.package_name }}.csproj --configuration Release
 
+      - name: Post Build Directory Structure
+        run: tree /f /a
 
-
-
-  # # build job builds for each of the target frameworks of the solution.
-  # build:
-  #   name: Build projects
-  #   # Using the latest Windows GitHub-hosted runner.
-  #   runs-on: windows-latest
-  #   # The matrix is used to define the frameworks that the project(s) support.
-  #   # For each value in the matrix a concurrent version of the job is run using that value.
-  #   # If any version of the job fails, it will cancel the other jobs running.
-  #   strategy:
-  #     matrix:
-  #       target_framework: [ net6.0, netcoreapp3.1, net48 ]
-
-  #   steps:
-  #     # Using Github checkout action to retrieve the codebase.
-  #     - name: Fetch code
-  #       uses: actions/checkout@v3
-          
-  #     # Using dotnet build to build the solution using a target framework specified in the matrix.
-  #     - name: Build ${{ matrix.target_framework }}
-  #       run: dotnet build .github/workflows/Build.sln --configuration Release --framework ${{ matrix.target_framework }}
-
-  #     # Using GitHub upload-artifact action to persist the workspace for the next job.
-  #     - name: Upload workspace
-  #       uses: actions/upload-artifact@v3
-  #       with:
-  #         name: workspace
-  #         path: ./
+      # Using GitHub upload-artifact action to persist the workspace for the next job.
+      - name: Upload workspace
+        uses: actions/upload-artifact@v3
+        with:
+          name: workspace
+          path: ./
 
   # # Calls snyk-exclusion reusable workflow.
   # snyk_exclusions:
