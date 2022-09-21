@@ -18,10 +18,8 @@ jobs:
     runs-on: ubuntu-latest
     # Creates output variables to be used in steps or other jobs.
     outputs: 
-      release_tag: ${{ steps.variables.outputs.release_tag }}
-      version_number: ${{ steps.variables.outputs.version_number }}
       package_name: ${{ steps.variables.outputs.package_name }}
-      repo_name: ${{ steps.variables.outputs.repo_name }}
+      package_version: ${{ steps.variables.outputs.package_version }}
 
     steps:
       # Set various variables needed in other jobs.
@@ -32,30 +30,23 @@ jobs:
         run: |
           # Gets release tag. 
           releaseTag=$(gh api -H "Accept: application/vnd.github+json" /repos/${GITHUB_REPOSITORY}/releases/latest | jq -r '.tag_name')
-          echo "release_tag: $releaseTag"
-          echo ::set-output name=release_tag::$releaseTag
+          echo "release tag: $releaseTag"
 
-          # Gets release version number from the release tag.
-          versionNumber=${releaseTag#${releaseTag%%[0-9]*}}
-          echo "release_version: $versionNumber"
-          echo ::set-output name=version_number::$versionNumber
-
-          # Gets release package name from the release tag.
+          # Gets package name from the release tag.
           packageName=${releaseTag%%?[[:digit:]]*}
-          echo "package_name: $packageName"
+          echo "package name: $packageName"
           echo ::set-output name=package_name::$packageName
 
-          # Gets the repo name from GITHUB_REPOSITORY env var.
-          repoName=${GITHUB_REPOSITORY#*RockLib/}
-          echo "repo_name: $repoName"
-          echo ::set-output name=repo_name::$repoName
+          # Gets package version from the release tag.
+          packageVersion=${releaseTag#${releaseTag%%[0-9]*}}
+          echo "package version: $packageVersion"
+          echo ::set-output name=package_version::$packageVersion
 
   # build job builds for each of the target frameworks of the solution.
   build:
     name: Build ${{ needs.set_variables.outputs.package_name }}
     # This job will not run until set_variables is complete and passes.
     needs: set_variables
-
     # Using the latest Ubuntu GitHub-hosted runner.
     runs-on: ubuntu-latest
 
@@ -67,13 +58,6 @@ jobs:
       # Using dotnet build to build the solution using a target framework specified in the matrix.
       - name: Build
         run: dotnet build ${{ needs.set_variables.outputs.package_name }}/${{ needs.set_variables.outputs.package_name }}.csproj --configuration Release
-
-      # # Using GitHub upload-artifact action to persist the workspace for the next job.
-      # - name: Upload ${{ needs.set_variables.outputs.package_name }}
-      #   uses: actions/upload-artifact@v3
-      #   with:
-      #     name: workspace
-      #     path: ./${{ needs.set_variables.outputs.package_name }}
 
       # Using GitHub upload-artifact action to persist the workspace for the next job.
       - name: Upload workspace
@@ -89,7 +73,7 @@ jobs:
     needs: [ set_variables, build ]
     # Using the latest Ubuntu GitHub-hosted runner.
     runs-on: ubuntu-latest
-    
+
     steps:
       # Using GitHub download-artifact action to get the workspace from the last job.
       - name: Download workspace
@@ -97,62 +81,41 @@ jobs:
         with:
           name: workspace
 
-      - name: FILE PATH
-        run: |
-          pwd
-          ls
-
       # Using Snyk provided action for Snyk monitor command.
       - name: Run Snyk monitor
         uses: snyk/actions/node@master
         env:
-          # Uses SNYK_TOKEN from org secrets
+          # Uses SNYK_TOKEN from org secrets.
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
         with:
           command: monitor
           args: --file=${{ needs.set_variables.outputs.package_name }}/${{ needs.set_variables.outputs.package_name }}.sln
 
-  # # pack_and_publish job packs the individual project(s) and publishes it to NuGet.org.
-  # pack_and_publish:
-  #   name: Pack and publish
-  #   # This job will not run until check_diff and build are complete and pass.
-  #   needs: [ check_diff, build ]
-  #   # Using the latest Windows GitHub-hosted runner.
-  #   runs-on: windows-latest
-  #   # Using approved projects from the matrix, the Release environment is called for those projects.
-  #   # Setting the environment to require approval within the repo GitHub environment settings gives us an approval step.
-  #   # All approvals must be approved or rejected before continuing.
-  #   # Without at least one approval this job will not run.
-  #   environment: 
-  #     name: Release ${{ matrix.package }}
-  #   # The matrix is used to define the projects that have been approved for publishing.
-  #   # For each value in the matrix a concurrent version of the job is run using that value.
-  #   # If any version of the job fails, the other jobs will keep running.
-  #   strategy:
-  #     fail-fast: false
-  #     matrix: 
-  #       package: ${{ fromJSON(needs.check_diff.outputs.diff) }}
+  # publish job pushed package to NuGet.org.
+  publish:
+    name: Publish ${{ needs.set_variables.outputs.package_name }}
+    # This job will not run until set_variables and build are complete and pass.
+    needs: [ set_variables, build ]
+    # Using the latest Ubuntu GitHub-hosted runner.
+    runs-on: ubuntu-latest
+    # Uses Release Package environment to require approval to publish a package to NuGet.org.
+    environment: 
+      name: Release Package
   
-  #   steps:
-  #     # Displays the package that was approved.
-  #     - name: Package ${{ matrix.package }} approved
-  #       run: echo "Package ${{ matrix.package }} approved for publishing."
+    steps:
+      # Displays the package that was approved.
+      - name: Package ${{ needs.set_variables.outputs.package_name }} approved
+        run: echo Package ${{ needs.set_variables.outputs.package_name }} approved for publishing.
 
-  #     # Using GitHub download-artifact action to get the workspace from the last job.
-  #     - name: Download workspace
-  #       uses: actions/download-artifact@v3
-  #       with:
-  #         name: workspace
+      # Using GitHub download-artifact action to get the workspace from the last job.
+      - name: Download workspace
+        uses: actions/download-artifact@v3
+        with:
+          name: workspace
 
-
-
-  #     # Using dotnet pack to package the specified project and output the nuget package to a target directory.
-  #     - name: Package ${{ matrix.package }}
-  #       run: dotnet pack ${{ env.CSPROJ_PATH }} --configuration Release --no-build --output nupkgs
-      
-  #     # Using dotnet nuget push to publish the specified package to NuGet.org.
-  #     - name: Publish ${{ matrix.package }}
-  #       # Getting the NUGET_API_KEY from the org secrets.
-  #       env:
-  #         API_KEY: ${{ secrets.NUGET_API_KEY }}
-  #       run: dotnet nuget push nupkgs/${{ env.PACKAGE_ID }}.${{ env.PACKAGE_VERSION }}.nupkg --api-key ${{ env.API_KEY }} --source https://api.nuget.org/v3/index.json
+      # Using dotnet nuget push to publish the specified package to NuGet.org.
+      - name: Publish ${{ needs.set_variables.outputs.package_name }}
+        # Getting the NUGET_API_KEY from the org secrets.
+        env:
+          API_KEY: ${{ secrets.NUGET_API_KEY }}
+        run: dotnet nuget push ${{ needs.set_variables.outputs.package_name }}/bin/Release/${{ needs.set_variables.outputs.package_name }}.${{ needs.set_variables.outputs.package_version }}.nupkg --api-key ${{ env.API_KEY }} --source https://api.nuget.org/v3/index.json
