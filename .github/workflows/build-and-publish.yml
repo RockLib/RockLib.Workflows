@@ -29,7 +29,7 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           # Gets release tag. 
-          releaseTag=$(gh api -H "Accept: application/vnd.github+json" /repos/${GITHUB_REPOSITORY}/releases/latest | jq -r '.tag_name')
+          releaseTag=$(gh api -H "Accept: application/vnd.github+json" /repos/${GITHUB_REPOSITORY}/releases | jq -r 'first | .tag_name')
           echo "release tag: $releaseTag"
 
           # Gets package name from the release tag.
@@ -55,7 +55,7 @@ jobs:
       - name: Fetch code
         uses: actions/checkout@v3
 
-      # Using dotnet build to build the solution using a target framework specified in the matrix.
+      # Using dotnet build to build and package the solution.
       - name: Build
         run: dotnet build ${{ needs.set_variables.outputs.package_name }}/${{ needs.set_variables.outputs.package_name }}.csproj --configuration Release
 
