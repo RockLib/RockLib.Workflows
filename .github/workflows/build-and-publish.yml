@@ -47,8 +47,8 @@ jobs:
     name: Build ${{ needs.set_variables.outputs.package_name }}
     # This job will not run until set_variables is complete and passes.
     needs: set_variables
-    # Using the latest Ubuntu GitHub-hosted runner.
-    runs-on: ubuntu-latest
+    # Using the latest Windows GitHub-hosted runner.
+    runs-on: windows-latest
 
     steps:
       # Using Github checkout action to retrieve the codebase.
