@@ -69,7 +69,7 @@ jobs:
   # snyk_monitor job reports project to Snyk UI for vulnerability monitoring.
   snyk_monitor:
     name: Snyk monitor
-    # This job will not run until build is complete and pass.
+    # This job will not run until set_variables and build are complete and pass.
     needs: [ set_variables, build ]
     # Using the latest Ubuntu GitHub-hosted runner.
     runs-on: ubuntu-latest

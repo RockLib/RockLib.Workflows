@@ -22,7 +22,7 @@ jobs:
       - name: Fetch code
         uses: actions/checkout@v3
 
-      # Using dotnet build to build and package the solution.
+      # Using dotnet build to build the solution.
       - name: Build
         run: dotnet build --configuration Release
 
@@ -48,7 +48,7 @@ jobs:
   # snyk_test job runs scan against project dependencies, looking for vulnerabilities.
   snyk_test:
     name: Snyk test
-    # This job will not run until build_and_test job finishes successfully.
+    # This job will not run until snyk_exclusions job finishes successfully.
     needs: snyk_exclusions
     # Using the latest Ubuntu GitHub-hosted runner.
     runs-on: ubuntu-latest
