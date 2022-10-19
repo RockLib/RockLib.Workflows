@@ -89,7 +89,7 @@ jobs:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
         with:
           command: monitor
-          args: --file=${{ needs.set_variables.outputs.package_name }}/${{ needs.set_variables.outputs.package_name }}.sln
+          args: --file=${{ needs.set_variables.outputs.package_name }}/obj/project.assets.json
 
   # publish job pushed package to NuGet.org.
   publish:
