@@ -29,7 +29,7 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           # Gets release tag. 
-          releaseTag=$(gh api -H "Accept: application/vnd.github+json" /repos/${GITHUB_REPOSITORY}/releases | jq -r 'first | .tag_name')
+          releaseTag=$(gh api -H "Accept: application/vnd.github+json" /repos/${GITHUB_REPOSITORY}/releases/latest | jq -r '.tag_name')
           echo "release tag: $releaseTag"
 
           # Gets package name from the release tag.
