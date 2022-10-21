@@ -18,8 +18,8 @@ jobs:
     runs-on: ubuntu-latest
     # Creates output variables to be used in steps or other jobs.
     outputs: 
-      package_name: ${{ steps.variables.outputs.package_name }}
-      package_version: ${{ steps.variables.outputs.package_version }}
+      PACKAGE_NAME: ${{ steps.variables.outputs.PACKAGE_NAME }}
+      PACKAGE_VERSION: ${{ steps.variables.outputs.PACKAGE_VERSION }}
 
     steps:
       # Set various variables needed in other jobs.
@@ -35,16 +35,16 @@ jobs:
           # Gets package name from the release tag.
           packageName=${releaseTag%%?[[:digit:]]*}
           echo "package name: $packageName"
-          echo ::set-output name=package_name::$packageName
+          echo "PACKAGE_NAME=$packageName" >> $GITHUB_OUTPUT
 
           # Gets package version from the release tag.
           packageVersion=${releaseTag#${releaseTag%%[0-9]*}}
           echo "package version: $packageVersion"
-          echo ::set-output name=package_version::$packageVersion
+          echo "PACKAGE_VERSION=$packageVersion" >> $GITHUB_OUTPUT
 
   # build job builds for each of the target frameworks of the solution.
   build:
-    name: Build ${{ needs.set_variables.outputs.package_name }}
+    name: Build ${{ needs.set_variables.outputs.PACKAGE_NAME }}
     # This job will not run until set_variables is complete and passes.
     needs: set_variables
     # Using the latest Windows GitHub-hosted runner.
@@ -57,7 +57,7 @@ jobs:
 
       # Using dotnet build to build and package the solution.
       - name: Build
-        run: dotnet build ${{ needs.set_variables.outputs.package_name }}/${{ needs.set_variables.outputs.package_name }}.csproj --configuration Release
+        run: dotnet build ${{ needs.set_variables.outputs.PACKAGE_NAME }}/${{ needs.set_variables.outputs.PACKAGE_NAME }}.csproj --configuration Release
 
       # Using GitHub upload-artifact action to persist the workspace for the next job.
       - name: Upload workspace
@@ -89,11 +89,11 @@ jobs:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
         with:
           command: monitor
-          args: --file=${{ needs.set_variables.outputs.package_name }}/obj/project.assets.json
+          args: --file=${{ needs.set_variables.outputs.PACKAGE_NAME }}/obj/project.assets.json
 
   # publish job pushed package to NuGet.org.
   publish:
-    name: Publish ${{ needs.set_variables.outputs.package_name }}
+    name: Publish ${{ needs.set_variables.outputs.PACKAGE_NAME }}
     # This job will not run until set_variables and build are complete and pass.
     needs: [ set_variables, build ]
     # Using the latest Ubuntu GitHub-hosted runner.
@@ -104,8 +104,8 @@ jobs:
   
     steps:
       # Displays the package that was approved.
-      - name: Package ${{ needs.set_variables.outputs.package_name }} approved
-        run: echo Package ${{ needs.set_variables.outputs.package_name }} approved for publishing.
+      - name: Package ${{ needs.set_variables.outputs.PACKAGE_NAME }} approved
+        run: echo Package ${{ needs.set_variables.outputs.PACKAGE_NAME }} approved for publishing.
 
       # Using GitHub download-artifact action to get the workspace from the last job.
       - name: Download workspace
@@ -114,8 +114,8 @@ jobs:
           name: workspace
 
       # Using dotnet nuget push to publish the specified package to NuGet.org.
-      - name: Publish ${{ needs.set_variables.outputs.package_name }}
+      - name: Publish ${{ needs.set_variables.outputs.PACKAGE_NAME }}
         # Getting the NUGET_API_KEY from the org secrets.
         env:
           API_KEY: ${{ secrets.NUGET_API_KEY }}
-        run: dotnet nuget push ${{ needs.set_variables.outputs.package_name }}/bin/Release/${{ needs.set_variables.outputs.package_name }}.${{ needs.set_variables.outputs.package_version }}.nupkg --api-key ${{ env.API_KEY }} --source https://api.nuget.org/v3/index.json
+        run: dotnet nuget push ${{ needs.set_variables.outputs.PACKAGE_NAME }}/bin/Release/${{ needs.set_variables.outputs.PACKAGE_NAME }}.${{ needs.set_variables.outputs.PACKAGE_VERSION }}.nupkg --api-key ${{ env.API_KEY }} --source https://api.nuget.org/v3/index.json
