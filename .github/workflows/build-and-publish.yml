@@ -118,6 +118,4 @@ jobs:
         # Getting the NUGET_API_KEY from the org secrets.
         env:
           API_KEY: ${{ secrets.NUGET_API_KEY }}
-        # run: dotnet nuget push ${{ needs.set_variables.outputs.PACKAGE_NAME }}/bin/Release/${{ needs.set_variables.outputs.PACKAGE_NAME }}.${{ needs.set_variables.outputs.PACKAGE_VERSION }}.nupkg --api-key ${{ env.API_KEY }} --source https://api.nuget.org/v3/index.json
-        run: |
-          echo ${{ needs.set_variables.outputs.PACKAGE_NAME }}/bin/Release/${{ needs.set_variables.outputs.PACKAGE_NAME }}.${{ needs.set_variables.outputs.PACKAGE_VERSION }}.nupkg
+        run: dotnet nuget push ${{ needs.set_variables.outputs.PACKAGE_NAME }}/bin/Release/${{ needs.set_variables.outputs.PACKAGE_NAME }}.${{ needs.set_variables.outputs.PACKAGE_VERSION }}.nupkg --api-key ${{ env.API_KEY }} --source https://api.nuget.org/v3/index.json
