@@ -6,10 +6,6 @@ name: Snyk Exclusions
 on:
   # Workflow will run when called by another workflow.
   workflow_call:
-    # Output the list of scan exclusions to be used by the calling job.
-    outputs:
-      scan_exclusions:
-        value: ${{ jobs.snyk_exclusions.outputs.scan_exclusions }}
 
 ####################################################################################################
 ##  WORKFLOW JOBS
@@ -22,8 +18,8 @@ jobs:
     runs-on: ubuntu-latest
     # Creates output variables to be used in steps or other jobs.
     outputs: 
-      scan_exclusions: ${{ steps.scan-exclusions.outputs.scan_exclusions }}
-    
+      SNYK_EXCLUSIONS: ${{ steps.snyk-exclusions.outputs.SNYK_EXCLUSIONS }}
+
     steps:
       # Using GitHub download-artifact action to get the workspace from the last job.
       - name: Download workspace
@@ -31,17 +27,17 @@ jobs:
         with:
           name: workspace
 
-    # Creates a comma separated list of directories or files to exclude from code scans.
+      # Creates a comma separated list of directories or files to exclude from code scans.
       - name: Find test or example project(s) to exclude
-        id: scan-exclusions
+        id: snyk-exclusions
         shell: pwsh
         run: |
-          # Filter to only Test and Example projects and add them to scanExclusions.
-          $scanExclusions = Get-ChildItem -Directory | Select-Object Name
-          $scanExclusions = $scanExclusions | Where-Object { ($_ -Match 'Tests') -or ($_ -Match 'Example') }
-          $scanExclusions = $scanExclusions | ConvertTo-CSV -UseQuotes Never -NoTypeInformation | Select-Object -Skip 1
-          $scanExclusions = $scanExclusions -join ','
-          echo "scan exclusions - $scanExclusions"
+          # Filter to only Test and Example projects and add them to snykExclusions.
+          $snykExclusions = Get-ChildItem -Directory | Select-Object Name
+          $snykExclusions = $snykExclusions | Where-Object { ($_ -Match 'Tests') -or ($_ -Match 'Example') }
+          $snykExclusions = $snykExclusions | ConvertTo-CSV -UseQuotes Never -NoTypeInformation | Select-Object -Skip 1
+          $snykExclusions = $snykExclusions -join ','
+          echo "snyk exclusions - $snykExclusions"
 
           # Set output.
-          echo "::set-output name=scan_exclusions::$scanExclusions"
+          echo "SNYK_EXCLUSIONS=$snykExclusions" | Out-File -FilePath $Env:GITHUB_OUTPUT -Encoding utf8 -Append
