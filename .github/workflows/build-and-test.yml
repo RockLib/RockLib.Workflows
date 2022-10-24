@@ -21,9 +21,11 @@ jobs:
       SNYK_EXCLUSIONS: ${{ steps.snyk-exclusions.outputs.SNYK_EXCLUSIONS }}
 
     steps:
-      # Using Github checkout action to retrieve the codebase.
+      # Using Github checkout action to retrieve the pull request codebase.
       - name: Fetch code
         uses: actions/checkout@v3
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
 
       # Using dotnet build to build the solution.
       - name: Build
