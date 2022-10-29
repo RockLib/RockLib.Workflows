@@ -1,4 +1,4 @@
-name: Shared Build and Test Workflow
+name: Shared Unit Test Workflow
 
 ####################################################################################################
 ##  WORKFLOW TRIGGER
@@ -11,9 +11,9 @@ on:
 ##  WORKFLOW JOBS
 ####################################################################################################
 jobs:
-  # build_and_test job builds and runs unit tests, and searches for exclusions from Snyk scans.
+  # build_and_test job builds and runs unit tests.
   build_and_test:
-    name: Build and test projects
+    name: Run unit tests
     # Using the latest Windows GitHub-hosted runner.
     runs-on: windows-latest
 
