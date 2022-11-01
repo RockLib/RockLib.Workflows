@@ -1,0 +1,39 @@
+name: Shared Unit Test Workflow
+
+####################################################################################################
+##  WORKFLOW TRIGGER
+####################################################################################################
+on:
+  # Workflow will run when called by another workflow.
+  workflow_call:
+
+####################################################################################################
+##  WORKFLOW JOBS
+####################################################################################################
+jobs:
+  # build_and_test job builds and runs unit tests.
+  build_and_test:
+    name: Run unit tests
+    # Using the latest Windows GitHub-hosted runner.
+    runs-on: windows-latest
+
+    steps:
+      # Using Github checkout action to retrieve the codebase.
+      - name: Fetch code
+        uses: actions/checkout@v3
+
+      # Using dotnet build to build the solution.
+      - name: Build
+        run: dotnet build --configuration Release
+
+      # Using dotnet test to run any unit tests found in the project.
+      # If any test fails, the job and workflow will fail.
+      - name: Test
+        run: dotnet test --configuration Release --no-build --verbosity normal
+
+      # Using GitHub upload-artifact action to persist the workspace for the next job.
+      - name: Upload workspace
+        uses: actions/upload-artifact@v3
+        with:
+          name: workspace
+          path: ./
