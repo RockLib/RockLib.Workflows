@@ -22,9 +22,13 @@ jobs:
       - name: Fetch code
         uses: actions/checkout@v3
 
-      # Using dotnet build to build the solution.
+      # Use Microsoft setup-msbuild action to add msbuild command to PATH.
+      - name: Add msbuild to PATH
+        uses: microsoft/setup-msbuild@v1
+
+      # Using msbuild to build and package the solution.
       - name: Build
-        run: dotnet build --configuration Release
+        run: msbuild -t:build -restore -verbosity:m -property:Configuration=Release
 
       # Using dotnet test to run any unit tests found in the project.
       # If any test fails, the job and workflow will fail.
