@@ -61,7 +61,7 @@ jobs:
 
       # Using msbuild to build and package the solution.
       - name: Build
-        run: msbuild -t:build -restore -verbosity:m -property:Configuration=Release
+        run: msbuild ${{ needs.set_variables.outputs.PACKAGE_NAME }}/${{ needs.set_variables.outputs.PACKAGE_NAME }}.csproj -t:build -restore -verbosity:m -property:Configuration=Release
 
       # Using GitHub upload-artifact action to persist the workspace for the next job.
       - name: Upload workspace
