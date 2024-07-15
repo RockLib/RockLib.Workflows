@@ -23,9 +23,6 @@ jobs:
       SNYK_TEST_URL: ${{ fromJSON(steps.snyk-test-variables.outputs.result).snyk_test_url }}
       PR_COMMENT_URL: ${{ fromJSON(steps.snyk-test-variables.outputs.result).pr_comment_url }}
       PR_STATUSES_URL: ${{ fromJSON(steps.snyk-test-variables.outputs.result).pr_statuses_url }}
-    # Only runs if the calling was triggered by a pull_request and completed successfully. 
-    if: >
-      github.event.workflow_run.conclusion == 'success'
 
     steps:
       # Gets the values needed for other steps of jobs.
