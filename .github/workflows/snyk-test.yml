@@ -25,7 +25,6 @@ jobs:
       PR_STATUSES_URL: ${{ fromJSON(steps.snyk-test-variables.outputs.result).pr_statuses_url }}
     # Only runs if the calling was triggered by a pull_request and completed successfully. 
     if: >
-      github.event.workflow_run.event == 'pull_request' &&
       github.event.workflow_run.conclusion == 'success'
 
     steps:
