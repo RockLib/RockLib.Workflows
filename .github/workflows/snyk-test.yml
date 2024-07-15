@@ -155,7 +155,7 @@ jobs:
           # Uses SNYK_TOKEN from org secrets
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
         with:
-          args: --all-projects --exclude=${{ needs.snyk_exclusions.outputs.SNYK_EXCLUSIONS }}
+          args: --all-projects --dotnet-runtime-resolution --exclude=${{ needs.snyk_exclusions.outputs.SNYK_EXCLUSIONS }}
 
       # Determines if Snyk test succeeded and writes a comment to the pull request.
       - name: Report Snyk test success
