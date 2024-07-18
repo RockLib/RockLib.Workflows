@@ -35,6 +35,9 @@ jobs:
       - name: Test
         run: dotnet test --configuration Release --no-build --verbosity normal
 
+      - name: Publish
+        run: dotnet publish --configuration Release
+
       # Using GitHub upload-artifact action to persist the workspace for the next job.
       - name: Upload workspace
         uses: actions/upload-artifact@v3
