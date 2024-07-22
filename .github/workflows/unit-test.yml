@@ -37,9 +37,9 @@ jobs:
 
       - name: Publish
         run: |
-          dotnet publish --configuration Release --framework net8.0
-          dotnet publish --configuration Release --framework net6.0
-          dotnet publish --configuration Release --framework net48
+          dotnet publish --configuration Release --framework net8.0 --sc
+          dotnet publish --configuration Release --framework net6.0 --sc
+          dotnet publish --configuration Release --framework net48 --sc
           
       # Using GitHub upload-artifact action to persist the workspace for the next job.
       - name: Upload workspace
